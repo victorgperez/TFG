@@ -180,7 +180,7 @@ train = splits[0]
 test = splits[1]
 
 # Modelo de GBT
-gbt = GBTClassifier(labelCol="attack_cat_index", featuresCol="Features_vec", maxIter=100, maxBins=136)
+gbt = GBTClassifier(labelCol="label_index_", featuresCol="Features_vec", maxIter=100, maxBins=136)
 
 
 # Entrenamos al modelo
@@ -195,7 +195,7 @@ predictions = model.transform(test)
 from pyspark.ml.evaluation import MulticlassClassificationEvaluator
 
 evaluator = MulticlassClassificationEvaluator(
-  labelCol="attack_cat_index", metricName="accuracy"
+  labelCol="label_index_", metricName="accuracy"
 )
 accuracy = evaluator.evaluate(predictions)
 print("Accuracy = {}".format(accuracy))

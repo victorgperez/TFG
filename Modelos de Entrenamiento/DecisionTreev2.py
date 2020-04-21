@@ -196,7 +196,7 @@ train = splits[0]
 test = splits[1]
 
 # Train a DecisionTree model.
-dt = DecisionTreeClassifier(labelCol="attack_cat_index", featuresCol="Features_vec",  maxBins=136)
+dt = DecisionTreeClassifier(labelCol="attack_cat_index_", featuresCol="Features_vec",  maxBins=136)
 
 
 
@@ -216,7 +216,7 @@ predictions = model.transform(test_data)
 from pyspark.ml.evaluation import MulticlassClassificationEvaluator
 
 evaluator = MulticlassClassificationEvaluator(
-  labelCol="attack_cat_index", metricName="accuracy"
+  labelCol="attack_cat_index_", metricName="accuracy"
 )
 accuracy = evaluator.evaluate(predictions)
 print("Accuracy = {}".format(accuracy))

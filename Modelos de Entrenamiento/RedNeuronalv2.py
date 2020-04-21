@@ -184,7 +184,7 @@ now = datetime.datetime.now()
 print (now.year, now.month, now.day, now.hour, now.minute, now.second)
 
 # create the trainer and set its parameters
-trainer = MultilayerPerceptronClassifier(maxIter=100, layers=layers, blockSize=128, seed=1234, labelCol="attack_cat_index" ,featuresCol="Features_vec")
+trainer = MultilayerPerceptronClassifier(maxIter=100, layers=layers, blockSize=128, seed=1234, labelCol="attack_cat_index_" ,featuresCol="Features_vec")
 
 
 # train the model
@@ -204,7 +204,7 @@ predictions = model.transform(test)
 from pyspark.ml.evaluation import MulticlassClassificationEvaluator
 
 evaluator = MulticlassClassificationEvaluator(
-  labelCol="attack_cat_index", metricName="accuracy"
+  labelCol="attack_cat_index_", metricName="accuracy"
 )
 accuracy = evaluator.evaluate(predictions)
 print("Accuracy = {}".format(accuracy))

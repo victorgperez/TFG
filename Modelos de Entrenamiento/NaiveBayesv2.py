@@ -224,7 +224,7 @@ predictions = model.transform(test)
 predictions.show()
 
 # compute accuracy on the test set
-evaluator = MulticlassClassificationEvaluator(labelCol="attack_cat_index", predictionCol="prediction",
+evaluator = MulticlassClassificationEvaluator(labelCol="attack_cat_index_", predictionCol="prediction",
                                               metricName="accuracy")
 accuracy = evaluator.evaluate(predictions)
 print("Test set accuracy = " + str(accuracy))

@@ -173,7 +173,7 @@ training_data, test_data = finalDataSet.randomSplit([0.7, 0.3])
 # Instantiate and fit random forest classifier
 from pyspark.ml.classification import RandomForestClassifier
 rfc = RandomForestClassifier(
-featuresCol="Features_vec", labelCol="attack_cat_index",
+featuresCol="Features_vec", labelCol="attack_cat_index_",
   maxBins=136
 )
 model = rfc.fit(training_data)
@@ -189,7 +189,7 @@ predictions = model.transform(test_data)
 from pyspark.ml.evaluation import MulticlassClassificationEvaluator
 
 evaluator = MulticlassClassificationEvaluator(
-  labelCol="attack_cat_index", metricName="accuracy"
+  labelCol="attack_cat_index_", metricName="accuracy"
 )
 accuracy = evaluator.evaluate(predictions)
 print("Accuracy = {}".format(accuracy))
