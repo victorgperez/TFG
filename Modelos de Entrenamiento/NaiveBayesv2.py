@@ -1,14 +1,13 @@
-"""
-Este fichero obtendrá el dataSet y
-modelará los datos para su posterior uso en entrenamiento y validacion
-"""
+
+import findspark
+findspark.init()
 
 import sys, os, re
 import json
 import codecs
 
 
-
+import pyspark
 import sys
 import decimal
 import time
@@ -54,13 +53,12 @@ from pyspark.sql.types import *
 from pyspark.context import SparkContext
 from pyspark.sql.session import SparkSession
 
-#Se crea una sescion de spark
-#Importante tras ejecucion hacer sc.stop()
+import findspark
+findspark.init()
 sc = SparkContext('local')
 spark = SparkSession(sc)
 
 
-#El fichero .csv no tiene cabeceras
 #Se define el esquema que va a tener el data frame
 schema = StructType([
     StructField( 'srcip', StringType(), True),
@@ -115,92 +113,66 @@ schema = StructType([
 
 
 
-"""
-Datos estarán posiblemente en formato CSV
-"""
-
-# Leer un CSV a un DataFrame, PONER EL BUENO
-
 dataSet = spark.read.format("csv").option("header", "true").schema(schema).option("mode", "DROPMALFORMED").load("UNSW.csv")
-
-
-# Conveniente una visualizacion para ver como están los datos.
-# Por ejemplo convertir a JSON y visualizar
-
-# Contar número de tramas o de comunicaciones en el dataSet
-
 
 print("features iniciales-------------------------------")
 print(len(dataSet.columns))
 print((dataSet.show(6)))
 
-#Procedemos a la vectorizacion de las caracteristicas
 
 
-
-
-dataSet = dataSet.sample(False, 0.15, seed=0)
+#Elegir el valor de sample
+dataSet = dataSet.sample(False, 0.75, seed=0)
 
 dataSet.count()
 
+dataSet = dataSet.na.replace([" Fuzzers "," Shellcode ","Backdoor"," Reconnaissance "],
+                             [" Fuzzers","Shellcode","Backdoors","Reconnaissance"],"attack_cat")
+dataSet.select("attack_cat").distinct().show()
 
-dataSet = dataSet.na.replace([" Fuzzers "," Shellcode ","Backdoor"," Reconnaissance "],[" Fuzzers","Shellcode","Backdoors","Reconnaissance"],"attack_cat")
-a = dataSet.select("attack_cat").distinct().show()
 
 
-from pyspark.ml.feature import StringIndexer, VectorAssembler, OneHotEncoderEstimator
 
-# Turn category fields into categoric feature vectors, then drop
-# intermediate fields
+from pyspark.ml.feature import StringIndexer
+
 for column in ["srcip","dstip","proto","state","service", "label", "attack_cat"]:
-  string_indexer = StringIndexer(
-    inputCol=column,
-    outputCol=column + "_index_",
-    handleInvalid="keep"
+      string_indexer = StringIndexer(
+        inputCol=column,
+        outputCol=column + "_index_",
+        handleInvalid="keep"
 
-  )
-  String_Indexer_Model= string_indexer.fit(dataSet)
-  dataSet = String_Indexer_Model.transform(dataSet)
-  base_path = "."
-  string_indexer_output_path = "{}/data/string_indexer_nb/string_indexer_model_{}.bin".format(
-  base_path,
-  column
       )
-  String_Indexer_Model.write().overwrite().save(string_indexer_output_path)
-
-# Check out the indexes
-dataSet.show(56)
+      String_Indexer_Model= string_indexer.fit(dataSet)
+      dataSet = String_Indexer_Model.transform(dataSet)
 
 
+      base_path = "."
+      string_indexer_output_path = "{}/data/string_indexer_NB/string_indexer_model_NB_{}.bin".format(
+      base_path,
+      column
+      )
+      String_Indexer_Model.write().overwrite().save(string_indexer_output_path)
 
-
-
-from pyspark.ml.feature import StringIndexer, VectorAssembler, OneHotEncoderEstimator
 index_columns_to_assembler = ["srcip_index_", "sport","dstip_index_","dsport","proto_index_", "state_index_","dur","sbytes","dbytes","sttl","dttl","sloss","dloss",
                "service_index_","Sload","Dload","Spkts","Dpkts","swin","dwin","stcpb","dtcpb","smeansz","dmeansz","trans_depth",
                "res_bdy_len","Sjit","Djit", "Stime","Ltime","Sintpkt","Dintpkt","tcprtt","synack","ackdat","is_sm_ips_ports",
                "ct_state_ttl","ct_flw_http_mthd","is_ftp_login","ct_ftp_cm","ct_srv_src","ct_srv_dst","ct_dst_ltm",
                "ct_src_ ltm", "ct_src_dport_ltm","ct_dst_sport_ltm", "ct_dst_src_ltm" ]
 
-
-index_columns = ["srcip", "sport","dstip","dsport","proto", "state","dur","sbytes","dbytes","sttl","dttl","sloss","dloss","service","Sload","Dload","Spkts","Dpkts","swin","dwin","stcpb","dtcpb","smeansz","dmeansz","trans_depth","res_bdy_len","Sjit","Djit", "Stime","Ltime","Sintpkt","Dintpkt","tcprtt","synack","ackdat","is_sm_ips_ports","ct_state_ttl","ct_flw_http_mthd","is_ftp_login","ct_ftp_cm","ct_srv_src","ct_srv_dst","ct_dst_ltm","ct_src_ ltm", "ct_src_dport_ltm","ct_dst_sport_ltm", "ct_dst_src_ltm", "label", "attack_cat","srcip_index_","dstip_index_","proto_index_","state_index_","service_index_", "label_index_", "attack_cat_index_"]
+index_columns = ["srcip", "sport","dstip","dsport","proto", "state","dur","sbytes","dbytes","sttl","dttl","sloss","dloss","service","Sload","Dload","Spkts","Dpkts","swin","dwin","stcpb","dtcpb","smeansz","dmeansz","trans_depth","res_bdy_len","Sjit","Djit", "Stime","Ltime","Sintpkt","Dintpkt","tcprtt","synack","ackdat","is_sm_ips_ports","ct_state_ttl","ct_flw_http_mthd","is_ftp_login","ct_ftp_cm","ct_srv_src","ct_srv_dst","ct_dst_ltm","ct_src_ ltm", "ct_src_dport_ltm","ct_dst_sport_ltm", "ct_dst_src_ltm", "label", "attack_cat","srcip_index_","dstip_index_","proto_index_","state_index_","service_index_", "label_index_"]
 
 vector_assembler = VectorAssembler(
   inputCols= index_columns_to_assembler,
-  outputCol="Features_vec"
+  outputCol="features"
 )
 finalDataSet = vector_assembler.transform(dataSet)
 vector_assembler_path = "{}/data/numeric_vector_assembler_nb.bin".format(base_path)
 vector_assembler.write().overwrite().save(vector_assembler_path)
-#finalDataSet.show(2)
-# Drop the index columns
+
 for column in index_columns:
   finalDataSet = finalDataSet.drop(column)
 
-
-
-# Check out the features
-finalDataSet.show(2)
+finalDataSet = finalDataSet.withColumnRenamed("attack_cat_index_", "label")
 
 
 from pyspark.ml.classification import NaiveBayes
@@ -219,12 +191,29 @@ model = nb.fit(train)
 model_output_path = "{}/data/NaiveBayer.bin".format( base_path)
 model.write().overwrite().save(model_output_path)
 
-# select example rows to display.
-predictions = model.transform(test)
-predictions.show()
 
-# compute accuracy on the test set
-evaluator = MulticlassClassificationEvaluator(labelCol="attack_cat_index_", predictionCol="prediction",
-                                              metricName="accuracy")
+
+from pyspark.ml.evaluation import MulticlassClassificationEvaluator
+
+# Evaluate model using test data
+predictions = model.transform(test)
+
+from pyspark.ml.evaluation import MulticlassClassificationEvaluator
+
+evaluator = MulticlassClassificationEvaluator(
+  labelCol="label", metricName="accuracy"
+)
 accuracy = evaluator.evaluate(predictions)
-print("Test set accuracy = " + str(accuracy))
+print("Accuracy = {}".format(accuracy))
+
+evaluator = MulticlassClassificationEvaluator(
+  labelCol="label", metricName="weightedPrecision"
+)
+weightedPrecision = evaluator.evaluate(predictions)
+print("weightedPrecision = {}".format(weightedPrecision))
+
+evaluator = MulticlassClassificationEvaluator(
+  labelCol="label", metricName="f1"
+)
+f1 = evaluator.evaluate(predictions)
+print("f1 = {}".format(f1))

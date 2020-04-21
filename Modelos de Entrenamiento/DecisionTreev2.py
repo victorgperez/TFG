@@ -222,13 +222,13 @@ accuracy = evaluator.evaluate(predictions)
 print("Accuracy = {}".format(accuracy))
 
 evaluator = MulticlassClassificationEvaluator(
-  labelCol="attack_cat_index", metricName="weightedPrecision"
+  labelCol="attack_cat_index_", metricName="weightedPrecision"
 )
 weightedPrecision = evaluator.evaluate(predictions)
 print("weightedPrecision = {}".format(weightedPrecision))
 
 evaluator = MulticlassClassificationEvaluator(
-  labelCol="attack_cat_index", metricName="f1"
+  labelCol="attack_cat_index_", metricName="f1"
 )
 f1 = evaluator.evaluate(predictions)
 print("f1 = {}".format(f1))
